@@ -16,14 +16,10 @@ export default function NavBar() {
     setIsDrawerOpen(false);
   };
 
-  const userRole = sessionStorage.getItem('userRole');
+  
 
   const navigationLinks = [
-    { to: '/', label: 'ראשי' }, // All users will see this link
-
-    // Add other links for admin users
-    ...(userRole === 'admin'
-      ? [
+    { to: '/', label: 'ראשי' }, 
           { to: '/statistics', label: 'סטטיסטיקות' },
           { to: '/users', label: 'ניהול משתמשים' },
           { to: '/PayToSupPage', label: 'שלם לספק' },
@@ -31,8 +27,8 @@ export default function NavBar() {
           { to: '/view', label: 'טבלאות מידע' },
           { to: '/updateprod', label: 'ערוך\\הוסף מוצר' },
           { to: '/deals', label: 'מבצעים' },
-        ]
-      : []),
+  
+      
   ];
 
   return (

@@ -55,34 +55,24 @@ function App({ userRole }) {
 
 
   return (
-    <div >
+    <div style={{width:'100vw' }}>
       <NavBar />
 
       <Routes basename="/">
         <Route path="/" element={<HomePage />} />
         <Route path="/payment" element={<Payment />} />
         <Route path="*" element={<NotFound />} />
-
-        {/* Authorized routes */}
-        {checkAuthorization('admin') && (
-          <>
-            {/* Render the admin-only routes */}
-            <Route path="/view" element={<ViewInventory />} />
+        <Route path="/view" element={<ViewInventory />} />
             <Route path="/update" element={<UpdateInventory />} />
             <Route path="/updateprod" element={<UpdatedProducts />} />
             <Route path="/PayToSupPage" element={<PayToSupPage />} />
             <Route path="/users" element={<UserManagement />} />
             <Route path="/statistics" element={<StatisticsPage />} />
             <Route path="/deals" element={<DealsPage />} />
-            
-            
-          </>
-        )}
 
-        {/* Default route for unauthorized users */}
-        {!checkAuthorization('admin') && (
-          <Route path="*" element={<Navigate to="/" />} />
-        )}
+       
+
+        
       </Routes>
     </div>
   );
