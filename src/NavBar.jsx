@@ -38,7 +38,7 @@ export default function NavBar() {
   return (
     <>
       <Link to="/" style={{ color: 'blue', position: 'absolute', top: '15px', left: '15px' }}>
-        עונג שבת
+      BizFlow
       </Link>
 
       <Box position="absolute" top={15} right={15}>

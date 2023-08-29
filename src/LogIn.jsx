@@ -59,22 +59,15 @@ const LogIn = () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const { email } = result.user;
-      const userDocRef = doc(firestore, 'users', email);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (!userDocSnap.exists()) {
-        alert('אתה לא מורשה להכנס לאתר');
-        setUser(null);
-        setUserRole(null); // Clear user role
-        sessionStorage.removeItem('userRole'); // Clear cached user role
-        await auth.signOut();
-      } else {
-        const userData = userDocSnap.data();
-        setUser(userData);
-        setUserRole(userData.role);
-        sessionStorage.setItem('userRole', userData.role); // Cache user role
-        sessionStorage.setItem('userEmail', userData.email); // Cache user role
-      }
+      const userData = {
+        email: email,
+        role: 'admin', 
+      };
+  
+      setUser(userData);
+      setUserRole(userData.role);
+      sessionStorage.setItem('userRole', userData.role);
+      sessionStorage.setItem('userEmail', userData.email);
     } catch (error) {
       console.error('Error signing in:', error);
     }
