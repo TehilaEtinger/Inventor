@@ -55,7 +55,7 @@ function App({ userRole }) {
 
 
   return (
-    <div style={{width:'100vw' }}>
+    <div style={{width:'80vw' ,marginLeft:'10vw', marginRight:'10vw' }}>
       <NavBar />
 
       <Routes basename="/">
