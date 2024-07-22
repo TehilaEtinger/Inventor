@@ -7,6 +7,8 @@ export default function Logut  ()  {
   const handleLogout = async () => {
     try {
       await auth.signOut();
+      sessionStorage.clear(); // Clear session storage
+      localStorage.clear(); // Clear local storage if needed
       window.location.reload(); // Reload the page after logout
     } catch (error) {
       console.error('Error signing out:', error);

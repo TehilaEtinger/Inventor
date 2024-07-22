@@ -7,6 +7,8 @@ import { Provider } from 'react-redux';
 import reducer from './Reducer.jsx';
 import LogIn from './LogIn.jsx';
 import App from './App';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 
@@ -17,7 +19,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <Provider store={appStore}>
       
     <HashRouter>
-      <App/>
+      <LogIn/>
     </HashRouter>
 
     </Provider>
