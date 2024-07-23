@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateDoc, addDoc, doc, collection,Timestamp,getDocs } from "firebase/firestore";
+import { updateDoc, addDoc, doc, collection, Timestamp, getDocs } from "firebase/firestore";
 import db from "../firebase";
 import { Box, Typography, Button, IconButton, TextField, Modal } from '@mui/material';
 import { Add, Remove } from '@mui/icons-material';
@@ -12,10 +12,9 @@ export default function ProductInStock({ product }) {
   const [operation, setOperation] = useState('add');
   const [inputError, setInputError] = useState(false);
   
- const cachedStock = useSelector(state => state.stock);
-
-  // Find the current product in the cached stock data
+  const cachedStock = useSelector(state => state.stock);
   const cachedProduct = cachedStock.find(item => item.id === product.id);
+
   const handleAddToInventory = () => {
     setOperation('add');
     setInputError(false);
@@ -35,70 +34,69 @@ export default function ProductInStock({ product }) {
   };
 
   const handleConfirmationOk = async () => {
-    let updatedQuantity=parseInt(product.Quantity, 10)
-    if (operation === 'losses'|| operation === 'reduce') {
-       updatedQuantity = parseInt(product.Quantity, 10) - parseInt(quantityToAdd, 10);
+    let updatedQuantity = parseInt(product.Quantity, 10);
+    if (operation === 'losses' || operation === 'reduce') {
+      updatedQuantity = parseInt(product.Quantity, 10) - parseInt(quantityToAdd, 10);
     }
     if (operation === 'add') {
-       updatedQuantity = parseInt(product.Quantity, 10) + parseInt(quantityToAdd, 10);
+      updatedQuantity = parseInt(product.Quantity, 10) + parseInt(quantityToAdd, 10);
     }
     if (updatedQuantity < 0) {
-        setInputError(true);
-        return;
-      }
-  
-      // Update the product in the database
+      setInputError(true);
+      console.error("Input error: Quantity cannot be negative");
+      return;
+    }
+
+    try {
       const productRef = doc(db, 'stock', product.id);
       await updateDoc(productRef, { Quantity: updatedQuantity });
-      // Dispatch an action to update the product quantity in the state
       dispatch({ type: 'UPDATE_QUANTITY', payload: { id: product.id, quantity: updatedQuantity } });
+      console.log(`Product ${product.Name} updated successfully to quantity ${updatedQuantity}`);
+
       if (operation === 'losses') {
-      // Calculate the debt to the supplier based on the quantity discarded and manufacturer's price
-      const debtToSupplier = quantityToAdd * product.ManufacturerPrice;
-  
-      // Update the supplier's totalDebt in the Suppliers table
-      if (product.Manufacturer) {
-        const suppliersRef = collection(db, 'suppliers');
-        const querySnapshot = await getDocs(suppliersRef);
-        const supplierDoc = querySnapshot.docs.find(
-          (doc) => doc.data().name === product.Manufacturer
-        );
-  
-        if (supplierDoc) {
-          const supplierId = supplierDoc.id;
-          const currentDebt = supplierDoc.data().totalDebt;
-          const updatedDebt = currentDebt + debtToSupplier;
-  
-          await updateDoc(doc(db, 'suppliers', supplierId), {
-            totalDebt: updatedDebt,
-          });
-  
-          console.log(`Debt to supplier ${product.Manufacturer} updated successfully!`);
+        const debtToSupplier = quantityToAdd * product.ManufacturerPrice;
+        if (product.Manufacturer) {
+          const suppliersRef = collection(db, 'suppliers');
+          const querySnapshot = await getDocs(suppliersRef);
+          const supplierDoc = querySnapshot.docs.find(
+            (doc) => doc.data().name === product.Manufacturer
+          );
+
+          if (supplierDoc) {
+            const supplierId = supplierDoc.id;
+            const currentDebt = supplierDoc.data().totalDebt;
+            const updatedDebt = currentDebt + debtToSupplier;
+
+            await updateDoc(doc(db, 'suppliers', supplierId), {
+              totalDebt: updatedDebt,
+            });
+
+            console.log(`Debt to supplier ${product.Manufacturer} updated successfully to ${updatedDebt}`);
+          }
         }
+
+        const lossesData = {
+          Manufacturer: product.Manufacturer,
+          ManufacturerPrice: product.ManufacturerPrice,
+          Name: product.Name,
+          Quantity: quantityToAdd,
+          Date: Timestamp.now()
+        };
+        await addDoc(collection(db, 'losses'), lossesData);
+        console.log(`Losses for product ${product.Name} recorded successfully`);
       }
-  
-      // Add the product to the losses table
-      const lossesData = {
-        Manufacturer: product.Manufacturer,
-        ManufacturerPrice: product.ManufacturerPrice,
-        Name: product.Name,
-        Quantity: quantityToAdd,
-        Date: Timestamp.now()
-      };
-      await addDoc(collection(db, 'losses'), lossesData);
+    } catch (error) {
+      console.error("Error updating product:", error);
     }
-    // Cache the updated quantityToAdd in session storage
+
     sessionStorage.setItem(`cachedProduct_${product.id}`, JSON.stringify({ quantityToAdd }));
-    // Clear the cached item from session storage
     sessionStorage.removeItem(`cachedProduct_${product.id}`);
-    // Reset the quantityToAdd and hide the confirmation modal
     setQuantityToAdd(1);
     setInputError(false);
     setShowConfirmation(false);
   };
 
   const handleConfirmationCancel = () => {
-    // Reset the quantityToAdd and hide the confirmation modal
     setQuantityToAdd(1);
     setInputError(false);
     setShowConfirmation(false);
@@ -106,7 +104,6 @@ export default function ProductInStock({ product }) {
 
   const handleKeyPress = (e) => {
     const keyPressed = e.key;
-    // Allow only numbers and the backspace key
     if (!/[0-9]|Backspace/.test(keyPressed)) {
       e.preventDefault();
     }
@@ -114,7 +111,7 @@ export default function ProductInStock({ product }) {
 
   return (
     <Box sx={{ flexGrow: 1, minWidth: '300px', maxWidth: '400px', padding: '16px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', borderRadius: '8px', background: '#fff' }}>
-    <Box sx={{ flexGrow: 1 }}>
+      <Box sx={{ flexGrow: 1 }}>
         <Typography variant="h6">
           {product.Name}
         </Typography>
@@ -129,16 +126,16 @@ export default function ProductInStock({ product }) {
         </Typography>
         <br></br>
       </Box>
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', ml: 2  }}>
-      <TextField
-        type="number"
-        label=" כמות להוספה\ החסרה\ זריקה"
-        value={quantityToAdd}
-        onChange={(e) => setQuantityToAdd(e.target.value)}
-        InputProps={{ inputProps: { min: 1 } }}
-        onKeyPress={handleKeyPress} // Add the onKeyPress event handler
-        sx={{ width: '12rem', textAlign: 'center', mb: 1 }}
-      />
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', ml: 2 }}>
+        <TextField
+          type="number"
+          label=" כמות להוספה\ החסרה\ זריקה"
+          value={quantityToAdd}
+          onChange={(e) => setQuantityToAdd(e.target.value)}
+          InputProps={{ inputProps: { min: 1 } }}
+          onKeyPress={handleKeyPress}
+          sx={{ width: '12rem', textAlign: 'center', mb: 1 }}
+        />
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <IconButton onClick={handleAddToInventory} color="primary" size="small">
             <Add />

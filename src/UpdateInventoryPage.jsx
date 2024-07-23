@@ -1,19 +1,28 @@
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { collection, onSnapshot } from 'firebase/firestore';
+import db from './firebase';
 import ProductInStock from './InventoryUpdate/ProductInStock';
-import { Button } from '@mui/material';
-import Search from './HomePage/Search'; // Import the Search component
+import Search from './HomePage/Search';
 
 export default function UpdateInventory() {
+  const dispatch = useDispatch();
   const products = useSelector(state => state.stock);
   const [searchInput, setSearchInput] = useState('');
 
-  // Function to filter the products based on the search input value
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'stock'), snapshot => {
+      const productsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      dispatch({ type: 'SET_PRODUCTS', payload: productsData });
+    });
+
+    return () => unsubscribe();
+  }, [dispatch]);
+
   const filterProducts = (input) => {
     setSearchInput(input.toLowerCase());
   };
 
-  // Filter the products based on the search input value
   const filteredProducts = products.filter(product =>
     product.Name.toLowerCase().includes(searchInput)
   );
@@ -21,11 +30,8 @@ export default function UpdateInventory() {
   return (
     <div>
       <br />
-      <br></br>
-      {/* Render the Search component and pass the filterProducts function as a prop */}
       <Search onSearch={filterProducts} />
       <div style={styles.container}>
-        {/* Use the filteredProducts instead of products */}
         {filteredProducts.map(product => (
           <ProductInStock key={product.id} product={product} />
         ))}
